@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Launch pi in the sandbox against the current directory (or $WORKSPACE).
+#   ./pi                 -> pi in ./workspace
+#   WORKSPACE=~/code/foo ./pi
+#   ./pi bash            -> shell inside the sandbox
+set -euo pipefail
+cd "$(dirname "$(readlink -f "$0")")"
+export HOST_UID="$(id -u)" HOST_GID="$(id -g)"
+exec docker compose run --rm pi "${@:-pi-ctf}"

@@ -1,0 +1,65 @@
+name: pi-sandbox
+
+services:
+  pi:
+    build:
+      context: .
+      # Build-time only: RUN steps use the host network instead of a veth/bridge.
+      # The runtime container still uses the isolated `sandbox` network below.
+      network: host
+      entitlements: [network.host]      # Compose builds via bake, which must be granted host networking
+      args:
+        HOST_UID: ${HOST_UID:-1000}
+        HOST_GID: ${HOST_GID:-1000}
+        PI_VERSION: ${PI_VERSION:-latest}
+    image: pi-sandbox:latest
+    hostname: pi-sandbox
+    stdin_open: true
+    tty: true
+
+    # Host's llama.cpp is reached via the sandbox network's gateway (= your host)
+    extra_hosts:
+      - "host.docker.internal:172.30.0.1"
+    environment:
+      LLAMA_BASE_URL: http://host.docker.internal:8080/v1
+      TZ: ${TZ:-Europe/Belgrade}
+
+    volumes:
+      # The ONLY host directory the agent can touch
+      - ${WORKSPACE:-./workspace}:/workspace
+      # Provider config, read-only so the agent can't repoint itself
+      - ./config/models.json:/home/pi/.pi/agent/models.json:ro
+      # Persistent home: pi sessions/settings, user npm/pip installs
+      - pi-home:/home/pi
+
+    networks: [sandbox]
+
+    # ---- hardening ----
+    read_only: true                     # immutable root fs; writable: /workspace, /home/pi, tmpfs
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,size=2g
+      - /run:rw,nosuid,nodev,noexec,size=16m
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 1024
+    mem_limit: 8g
+    memswap_limit: 8g
+    cpus: 4
+    ulimits:
+      nofile: { soft: 65536, hard: 65536 }
+    # Stronger kernel isolation if gVisor is installed (https://gvisor.dev):
+    # runtime: runsc
+
+volumes:
+  pi-home:
+
+networks:
+  sandbox:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: br-pi   # fixed name -> easy firewall rules
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
+          gateway: 172.30.0.1
