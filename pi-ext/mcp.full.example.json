@@ -1,20 +1,28 @@
 {
-  "_comment": "Full roster incl. Burp. Use with: CLAWD_PI_MCP_CONFIGS='[\"/workspace/mcp.full.example.json\"]' pi-ctf (copy this file into /workspace first). Burp's MCP server runs INSIDE Burp Suite on your HOST (PortSwigger/mcp-server, default SSE http://127.0.0.1:9876/sse). For the sandbox to reach it you must (1) have Burp running with the MCP extension enabled, and (2) open that port from br-pi in firewall.sh (currently only 8080 is allowed).",
+  "_comment": "Full roster incl. Burp, in native pi (>=1.4) format. To use it instead of the baked default, point pi-ctf at it: PI_MCP_SRC=/workspace/mcp.full.example.json pi-ctf (copy this file into /workspace first), or drop it in a trusted project as .pi/mcp.json. Burp's MCP server runs INSIDE Burp Suite on your HOST (PortSwigger/mcp-server, default SSE http://127.0.0.1:9876/sse). For the sandbox to reach it you must (1) have Burp running with the MCP extension enabled, and (2) open that port from br-pi in firewall.sh (currently only 8080 is allowed). exposure/description/toolExposure are documented in pi-ext/mcp.json.",
   "mcpServers": {
     "keel": {
       "command": "keel-pentest",
-      "args": []
+      "args": [],
+      "exposure": "deferred",
+      "description": "Scoped pentest control plane: define engagement scope and run allow-listed security tooling within it."
     },
     "pentest": {
       "command": "node",
-      "args": ["/opt/pi/vendor/mcp-pentest/dist/index.js"]
+      "args": ["/opt/pi/vendor/mcp-pentest/dist/index.js"],
+      "exposure": "deferred",
+      "description": "General penetration-testing tools: reconnaissance, port/service scanning, and enumeration."
     },
     "cyber": {
       "command": "node",
-      "args": ["/opt/pi/vendor/pentesting-cyber-mcp/servers/unified/build/index.js"]
+      "args": ["/opt/pi/vendor/pentesting-cyber-mcp/servers/unified/build/index.js"],
+      "exposure": "deferred",
+      "description": "Unified offensive-security toolkit: network, web, and host scanning utilities."
     },
     "burp": {
-      "url": "http://host.docker.internal:9876/sse"
+      "url": "http://host.docker.internal:9876/sse",
+      "exposure": "deferred",
+      "description": "Burp Suite (host): proxy history, scanner, repeater and intruder over the Burp MCP extension."
     }
   }
 }

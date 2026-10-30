@@ -1,16 +1,23 @@
 {
+  "_comment": "Native pi (>=1.4) MCP config. pi-ctf materializes this into the agent dir (~/.pi/agent/mcp.json) at launch, applying PI_DEFER. Same `mcpServers` shape every MCP client uses, plus pi's `exposure`/`description`/`toolExposure`. exposure: deferred = tools hidden until the model finds them with `tool_search`, then called directly (default here). Alternatives: codemode (script-only), direct (declared up front, = PI_DEFER=off), hidden. `description` feeds the compact mcp_servers index in the system prompt and the BM25 ranker. Override a single tool with toolExposure, e.g. \"toolExposure\": { \"scope_*\": \"direct\" } to always-load matching tools.",
   "mcpServers": {
     "keel": {
       "command": "keel-pentest",
-      "args": []
+      "args": [],
+      "exposure": "deferred",
+      "description": "Scoped pentest control plane: define engagement scope and run allow-listed security tooling within it."
     },
     "pentest": {
       "command": "node",
-      "args": ["/opt/pi/vendor/mcp-pentest/dist/index.js"]
+      "args": ["/opt/pi/vendor/mcp-pentest/dist/index.js"],
+      "exposure": "deferred",
+      "description": "General penetration-testing tools: reconnaissance, port/service scanning, and enumeration."
     },
     "cyber": {
       "command": "node",
-      "args": ["/opt/pi/vendor/pentesting-cyber-mcp/servers/unified/build/index.js"]
+      "args": ["/opt/pi/vendor/pentesting-cyber-mcp/servers/unified/build/index.js"],
+      "exposure": "deferred",
+      "description": "Unified offensive-security toolkit: network, web, and host scanning utilities."
     }
   }
 }

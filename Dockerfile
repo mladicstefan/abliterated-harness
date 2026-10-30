@@ -47,9 +47,10 @@ RUN --mount=type=cache,target=/root/.npm \
 
 # ---------------------------------------------------------------------------
 # Web-CTF / pentest layer. Everything lands in /opt (outside the pi-home
-# volume) so it survives at runtime. This pi has NO built-in MCP client, so
-# MCP servers are reached through the clawos pi-mcp-bridge extension (see
-# /usr/local/bin/pi-ctf and /opt/pi/mcp.json).
+# volume) so it survives at runtime. pi (>=1.4) has a built-in MCP client, so
+# servers are reached natively from the agent-dir mcp.json (materialized by
+# /usr/local/bin/pi-ctf from /opt/pi/mcp.json); their tools are loaded on
+# demand via pi's `tool_search`. No third-party MCP bridge is used.
 #
 # NOTE: the git repos below are third-party and unpinned (cloned at build
 # time). They execute real tooling. Review them; build only in the sandbox.
@@ -97,16 +98,17 @@ RUN git clone --depth 1 https://github.com/hackersatyamrastogi/pentesting-cyber-
  && test -f /opt/pi/vendor/pentesting-cyber-mcp/servers/unified/build/index.js && echo "cyber unified OK" \
  || echo "WARN: cyber unified unavailable (remove its entry from /opt/pi/mcp.json)"
 
-# pi MCP bridge + skill manager + skills, vendored into /opt/pi
+# Skills, vendored into /opt/pi. pi loads these natively with `--skill`
+# (progressive disclosure: name+description in the prompt, SKILL.md read on
+# demand) — no third-party skill-manager extension needed.
 RUN npm install --prefix /opt/pi/vendor \
-      @clawos-dev/pi-mcp-bridge \
-      @spences10/pi-skills \
       @howaboua/pi-skill-harness-and-agent-engineering \
  && mkdir -p /opt/pi/skills \
  && cp -r /opt/pi/vendor/node_modules/@howaboua/pi-skill-harness-and-agent-engineering/skills/. /opt/pi/skills/
 
 COPY --chmod=0755 pi-ext/pi-ctf.sh /usr/local/bin/pi-ctf
 COPY pi-ext/mcp.json /opt/pi/mcp.json
+COPY pi-ext/defer-estimate.mjs /opt/pi/defer-estimate.mjs
 
 # Non-root user whose UID/GID match yours on the host -> no root-owned files in your projects
 RUN groupadd -g "${HOST_GID}" pi \

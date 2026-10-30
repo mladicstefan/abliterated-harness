@@ -23,6 +23,9 @@ services:
     environment:
       LLAMA_BASE_URL: http://host.docker.internal:8080/v1
       TZ: ${TZ:-Europe/Belgrade}
+      # Deferred MCP tool loading (see pi-ext/pi-ctf.sh): on | off | auto
+      PI_DEFER: ${PI_DEFER:-on}
+      PI_DEFER_THRESHOLD_PCT: ${PI_DEFER_THRESHOLD_PCT:-15}
 
     volumes:
       # The ONLY host directory the agent can touch
